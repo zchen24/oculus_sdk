@@ -31,3 +31,4 @@ endif()
 include_directories(../../3rdParty/glext)
 
 add_library (CommonSrc STATIC ${SOURCE_FILES} ${PLATFORM_SOURCE_FILES})
+target_link_libraries (CommonSrc OculusVR ${OVR_LIBRARIES})

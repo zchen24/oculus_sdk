@@ -1034,6 +1034,8 @@ int main(int argc, const char* argv[])
     app->SetPlatformCore(gPlatform);
 
     int exitCode = app->OnStartup(argc, argv);
+    printf("exitCode = %d\n", exitCode);
+
     if (!exitCode)
         exitCode = gPlatform->Run();
 

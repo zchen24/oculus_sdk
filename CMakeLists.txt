@@ -65,4 +65,11 @@ if(OCULUS_BUILD_SAMPLES)
 
     add_subdirectory (Samples/OculusWorldDemo )
     set_target_properties(OculusWorldDemo PROPERTIES FOLDER "Samples")
+
+#    add_subdirectory (Samples/OculusRoomTiny )
+#    set_target_properties(OculusRoomTiny PROPERTIES FOLDER "Samples")
+
+    add_subdirectory (Samples/OculusViewer )
+    set_target_properties(OculusViewer PROPERTIES FOLDER "Samples")
+
 endif()
