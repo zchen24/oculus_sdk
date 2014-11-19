@@ -23,6 +23,11 @@ protected:
     const ovrHmdDesc* mHmd;
     ovrEyeRenderDesc mEyeRenderDesc[2];
     ovrFovPort mEyeFov[2];
+    ovrRecti mEyeRenderViewport[2];
+    ovrSizei mRenderSize;
+
+    // Distortion
+    ovrVector2f mUVScaleOffset[2][2];
 };
 
 #endif  // MY_OCULUS_RIFT_H

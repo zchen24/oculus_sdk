@@ -1,6 +1,7 @@
 // oculus
 #include <iostream>
 #include "UtilOculusRift.h"
+#include "GL/glut.h"
 
 MyOculusRift::MyOculusRift()
 {
@@ -59,6 +60,53 @@ void MyOculusRift::InitProfile()
         }
     }
 
+
+    //------- Basically Update Mesh Stuff ----------
+    // Initialize ovrEyeRenderDesc struct.
+    mRenderSize.w = 800;
+    mRenderSize.h = 450;
+
+//    ovrSizei texLeftSize = ovrHmd_GetFovTextureSize(
+//                mHmd, ovrEye_Left, mHmd->DefaultEyeFov[0], 1.0f);
+//    ovrSizei texRightSize = ovrHmd_GetFovTextureSize(
+//                mHmd, ovrEye_Right, mHmd->DefaultEyeFov[1], 1.0f);
+
+    mEyeFov[0] = mHmd->DefaultEyeFov[0];
+    mEyeFov[1] = mHmd->DefaultEyeFov[1];
+
+    mEyeRenderViewport[0].Pos.x = 0;
+    mEyeRenderViewport[0].Pos.y = 0;
+    mEyeRenderViewport[0].Size.w = mRenderSize.w/2;
+    mEyeRenderViewport[0].Size.h = mRenderSize.h;
+    mEyeRenderViewport[1].Pos.x = (mRenderSize.w + 1)/2;
+    mEyeRenderViewport[1].Pos.y = 0;
+    mEyeRenderViewport[1].Size = mEyeRenderViewport[0].Size;
+
+    mEyeRenderDesc[0] = ovrHmd_GetRenderDesc(mHmd, ovrEye_Left, mEyeFov[0]);
+    mEyeRenderDesc[1] = ovrHmd_GetRenderDesc(mHmd, ovrEye_Right, mEyeFov[1]);
+
+    for (size_t eyeNum = 0; eyeNum < 2; eyeNum++)
+    {
+        ovrDistortionMesh meshData;
+        unsigned int distortionCaps =
+                ovrDistortionCap_Vignette |
+                ovrDistortionCap_Chromatic;
+
+        // create mesh
+        ovrHmd_CreateDistortionMesh(mHmd,
+                                    mEyeRenderDesc[eyeNum].Eye,
+                                    mEyeRenderDesc[eyeNum].Fov,
+                                    distortionCaps,
+                                    &meshData);
+
+        // allocate & generate distortion mesh vertices
+        ovrHmd_GetRenderScaleAndOffset(mEyeRenderDesc[eyeNum].Fov,
+                                       mRenderSize,
+                                       mEyeRenderViewport[eyeNum],
+                                       mUVScaleOffset[eyeNum]);
+    }
+
+    1 == 1;
 }
 
 

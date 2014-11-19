@@ -13,9 +13,6 @@
  */
 
 void *file_contents(const char *filename, GLint *length);
-void *read_tga(const char *filename, int *width, int *height);
-
-
 static cv::VideoCapture cap;
 
 static struct {
@@ -178,14 +175,14 @@ static int make_resources(void)
 
     g_resources.vertex_shader = make_shader(
         GL_VERTEX_SHADER,
-        "./shaderGL/hello-gl.v.glsl"
+        "./shaderGL/oculus.v.glsl"
     );
     if (g_resources.vertex_shader == 0)
         return 0;
 
     g_resources.fragment_shader = make_shader(
         GL_FRAGMENT_SHADER,
-        "./shaderGL/hello-gl.f.glsl"
+        "./shaderGL/oculus.f.glsl"
     );
     if (g_resources.fragment_shader == 0)
         return 0;
@@ -300,7 +297,7 @@ int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
-    glutInitWindowSize(400, 300);
+    glutInitWindowSize(800, 450);
     glutCreateWindow("Hello World");   
     glutDisplayFunc(&render);
     glutIdleFunc(&cbOnIdle);

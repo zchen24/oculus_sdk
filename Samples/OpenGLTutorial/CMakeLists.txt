@@ -11,8 +11,8 @@ add_executable(OpenGLTutorial
   mainCopy.cpp
   UtilOculusRift.h
   UtilOculusRift.cpp
-  shader/hello-gl.f.glsl
-  shader/hello-gl.v.glsl)
+  shader/oculus.f.glsl
+  shader/oculus.v.glsl)
 
 target_link_libraries(OpenGLTutorial
   ${orocos_kdl_LIBRARIES}
