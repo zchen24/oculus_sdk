@@ -23,12 +23,14 @@ static cv::VideoCapture cap;
 
 static struct {
     GLuint vertex_buffer, element_buffer;
-    GLuint textures[2];
+    GLuint texture;
     GLuint vertex_shader, fragment_shader, program;
     
     struct {
         GLint fade_factor;
-        GLint textures[2];
+        GLint texture;
+        GLint EyeToSourceUVScaleLoc;
+        GLint EyeToSourceUVOffsetLoc;
     } uniforms;
 
     struct {
@@ -55,31 +57,6 @@ static GLuint make_buffer(
 
 static GLuint make_texture(const char *filename)
 {
-#if 0
-    int width, height;
-    void *pixels = read_tga(filename, &width, &height);
-    GLuint texture;
-
-    if (!pixels)
-        return 0;
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP_TO_EDGE);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0,           /* target, level */
-        GL_RGB8,                    /* internal format */
-        width, height, 0,           /* width, height, border */
-        GL_BGR, GL_UNSIGNED_BYTE,   /* external format, type */
-        pixels                      /* pixels */
-    );
-    free(pixels);
-    return texture;
-#else
-
     // opencv version
     int width, height;
     GLuint texture;
@@ -103,7 +80,6 @@ static GLuint make_texture(const char *filename)
     );
 
     return texture;
-#endif
 }
 
 static void show_info_log(
@@ -194,14 +170,14 @@ static int make_resources(void)
         sizeof(g_element_buffer_data)
     );
 
-//    g_resources.textures[0] = make_texture("./assetsGL/hello1.tga");
-//    g_resources.textures[1] = make_texture("./assetsGL/hello2.tga");
+//    g_resources.textures[0] = make_texture("./assetsGL/hello1.png");
+//    g_resources.textures[1] = make_texture("./assetsGL/hello2.png");
 
-    g_resources.textures[0] = make_texture("./assetsGL/hello1.png");
-    g_resources.textures[1] = make_texture("./assetsGL/hello2.png");
+    g_resources.texture = make_texture("./assetsGL/hello1.png");
 
-    if (g_resources.textures[0] == 0 || g_resources.textures[1] == 0)
+    if (g_resources.texture == 0) {
         return 0;
+    }
 
     g_resources.vertex_shader = make_shader(
         GL_VERTEX_SHADER,
@@ -221,15 +197,18 @@ static int make_resources(void)
     if (g_resources.program == 0)
         return 0;
 
-    g_resources.uniforms.fade_factor
-        = glGetUniformLocation(g_resources.program, "fade_factor");
-    g_resources.uniforms.textures[0]
-        = glGetUniformLocation(g_resources.program, "textures[0]");
-    g_resources.uniforms.textures[1]
-        = glGetUniformLocation(g_resources.program, "textures[1]");
+    // uniform for eye
+    g_resources.uniforms.EyeToSourceUVOffsetLoc =
+            glGetUniformLocation(g_resources.program, "EyeToSourceUVScale");
+    g_resources.uniforms.EyeToSourceUVOffsetLoc =
+            glGetUniformLocation(g_resources.program, "EyeToSourceUVOffset");
 
-    g_resources.attributes.position
-        = glGetAttribLocation(g_resources.program, "position");
+    g_resources.uniforms.fade_factor =
+            glGetUniformLocation(g_resources.program, "fade_factor");
+    g_resources.uniforms.texture =
+            glGetUniformLocation(g_resources.program, "texture");
+    g_resources.attributes.position =
+            glGetAttribLocation(g_resources.program, "position");
 
     return 1;
 }
@@ -266,15 +245,23 @@ static void render(void)
 {
     glUseProgram(g_resources.program);
 
-    glUniform1f(g_resources.uniforms.fade_factor, g_resources.fade_factor);
-    
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, g_resources.textures[0]);
-    glUniform1i(g_resources.uniforms.textures[0], 0);
 
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, g_resources.textures[1]);
-    glUniform1i(g_resources.uniforms.textures[1], 1);
+//    GLfloat eyeToSourceUVScale[2];
+//    eyeToSourceUVScale[0] = 1.0; eyeToSourceUVScale[1] = 1.0;
+//    glUniform2fv(g_resources.uniforms.EyeToSourceUVScaleLoc,
+//                 2, eyeToSourceUVScale);
+
+    GLfloat eyeToSourceUVOffset[2];
+    eyeToSourceUVOffset[0] = 1.0; eyeToSourceUVOffset[1] = 1.0;
+    glUniform2fv(g_resources.uniforms.EyeToSourceUVOffsetLoc,
+                 2, eyeToSourceUVOffset);
+
+    glUniform1f(g_resources.uniforms.fade_factor, g_resources.fade_factor);
+
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, g_resources.texture);
+    glUniform1i(g_resources.uniforms.texture, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, g_resources.vertex_buffer);
     glVertexAttribPointer(
@@ -310,6 +297,8 @@ int main(int argc, char** argv)
     glutCreateWindow("Hello World");
     glutIdleFunc(&update_fade_factor);
     glutDisplayFunc(&render);
+
+    std::cout << "OpenGL: " << glGetString(GL_VERSION) << std::endl;
 
     glewInit();
     if (!GLEW_VERSION_2_0) {

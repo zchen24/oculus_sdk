@@ -9,8 +9,6 @@ find_package( OpenCV REQUIRED )
 
 add_executable(OpenGLTutorial
   mainCopy.cpp
-  shader/sample.vs
-  shader/sample.fs
   shader/hello-gl.f.glsl
   shader/hello-gl.v.glsl)
 
