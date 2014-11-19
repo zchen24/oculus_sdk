@@ -2,19 +2,22 @@ project(OpenGLTutorial)
 
 find_package( OpenCV REQUIRED )
 
-#add_executable(OpenGLTutorial
-#  mainOpenGL.cpp
-#  shader/sample.vs
-#  shader/sample.fs)
+include_directories(../../3rdParty/glext)
+set(OVR_ALL_LIBRARIES OculusVR)
+list(APPEND OVR_ALL_LIBRARIES ${OVR_LIBRARIES} CommonSrc Xinerama)
+
 
 add_executable(OpenGLTutorial
   mainCopy.cpp
+  UtilOculusRift.h
+  UtilOculusRift.cpp
   shader/hello-gl.f.glsl
   shader/hello-gl.v.glsl)
 
 target_link_libraries(OpenGLTutorial
   ${orocos_kdl_LIBRARIES}
   ${OpenCV_LIBS}
+  ${OVR_ALL_LIBRARIES}
   glut GLEW
   )
 

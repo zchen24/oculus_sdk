@@ -1,15 +1,12 @@
 #include <stdlib.h>
 #include <GL/glew.h>
-#ifdef __APPLE__
-#  include <GLUT/glut.h>
-#else
-#  include <GL/glut.h>
-#endif
+#include <GL/glut.h>
 
-#include "util.h"
 #include <math.h>
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
+
+#include "UtilOculusRift.h"
 
 /*
  * Global data used by our render callback:
@@ -216,12 +213,11 @@ static int make_resources(void)
 /*
  * GLUT callbacks:
  */
-static void update_fade_factor(void)
+static void cbOnIdle(void)
 {
     int milliseconds = glutGet(GLUT_ELAPSED_TIME);
     g_resources.fade_factor = sinf((float)milliseconds * 0.001f) * 0.5f + 0.5f;
     glutPostRedisplay();
-
 
     // grep image and update texture from webcam;
     cv::Mat frame;
@@ -239,6 +235,9 @@ static void update_fade_factor(void)
         GL_BGR, GL_UNSIGNED_BYTE,   /* external format, type */
         frame.data                  /* pixels */
     );
+
+    // Update Oculus Tracking Here
+    // Oculus.UpdateTracking()
 }
 
 static void render(void)
@@ -286,6 +285,14 @@ static void render(void)
     glutSwapBuffers();
 }
 
+
+
+void cbKeyFunc(unsigned char key, int x, int y)
+{
+    std::cout << "key = " << key << std::endl;
+}
+
+
 /*
  * Entry point
  */
@@ -294,9 +301,10 @@ int main(int argc, char** argv)
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
     glutInitWindowSize(400, 300);
-    glutCreateWindow("Hello World");
-    glutIdleFunc(&update_fade_factor);
+    glutCreateWindow("Hello World");   
     glutDisplayFunc(&render);
+    glutIdleFunc(&cbOnIdle);
+    glutKeyboardFunc(&cbKeyFunc);
 
     std::cout << "OpenGL: " << glGetString(GL_VERSION) << std::endl;
 
@@ -317,6 +325,11 @@ int main(int argc, char** argv)
         std::cerr << "Failed to Open webcam" << std::endl;
         return -1;
     }
+
+    // Oculus Rift
+    MyOculusRift Oculus;
+    Oculus.InitProfile();
+    Oculus.InitTracking();
 
     glutMainLoop();
     return 0;
