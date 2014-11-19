@@ -19,6 +19,8 @@ void *file_contents(const char *filename, GLint *length);
 void *read_tga(const char *filename, int *width, int *height);
 
 
+static cv::VideoCapture cap;
+
 static struct {
     GLuint vertex_buffer, element_buffer;
     GLuint textures[2];
@@ -240,6 +242,24 @@ static void update_fade_factor(void)
     int milliseconds = glutGet(GLUT_ELAPSED_TIME);
     g_resources.fade_factor = sinf((float)milliseconds * 0.001f) * 0.5f + 0.5f;
     glutPostRedisplay();
+
+
+    // grep image and update texture from webcam;
+    cv::Mat frame;
+    cap >> frame;
+
+    // opencv version
+    int width, height;
+    cv::flip(frame, frame, 0);  // flip around x
+    width = frame.cols;
+    height = frame.rows;
+    glTexImage2D(
+        GL_TEXTURE_2D, 0,           /* target, level */
+        GL_RGB8,                    /* internal format */
+        width, height, 0,           /* width, height, border */
+        GL_BGR, GL_UNSIGNED_BYTE,   /* external format, type */
+        frame.data                  /* pixels */
+    );
 }
 
 static void render(void)
@@ -302,37 +322,18 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    // Open Webcam
+    cap.open(0);
+    if (!cap.isOpened()) {
+        std::cerr << "Failed to Open webcam" << std::endl;
+        return -1;
+    }
+
     glutMainLoop();
     return 0;
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#include <GL/glew.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 /*
  * Boring, non-OpenGL-related utility functions
@@ -359,88 +360,3 @@ void *file_contents(const char *filename, GLint *length)
 
     return buffer;
 }
-
-static short le_short(unsigned char *bytes)
-{
-    return bytes[0] | ((char)bytes[1] << 8);
-}
-
-void *read_tga(const char *filename, int *width, int *height)
-{
-    struct tga_header {
-       char  id_length;
-       char  color_map_type;
-       char  data_type_code;
-       unsigned char  color_map_origin[2];
-       unsigned char  color_map_length[2];
-       char  color_map_depth;
-       unsigned char  x_origin[2];
-       unsigned char  y_origin[2];
-       unsigned char  width[2];
-       unsigned char  height[2];
-       char  bits_per_pixel;
-       char  image_descriptor;
-    } header;
-    int i, color_map_size, pixels_size;
-    FILE *f;
-    size_t read;
-    void *pixels;
-
-    f = fopen(filename, "rb");
-
-    if (!f) {
-        fprintf(stderr, "Unable to open %s for reading\n", filename);
-        return NULL;
-    }
-
-    read = fread(&header, 1, sizeof(header), f);
-
-    if (read != sizeof(header)) {
-        fprintf(stderr, "%s has incomplete tga header\n", filename);
-        fclose(f);
-        return NULL;
-    }
-    if (header.data_type_code != 2) {
-        fprintf(stderr, "%s is not an uncompressed RGB tga file\n", filename);
-        fclose(f);
-        return NULL;
-    }
-    if (header.bits_per_pixel != 24) {
-        fprintf(stderr, "%s is not a 24-bit uncompressed RGB tga file\n", filename);
-        fclose(f);
-        return NULL;
-    }
-
-    for (i = 0; i < header.id_length; ++i)
-        if (getc(f) == EOF) {
-            fprintf(stderr, "%s has incomplete id string\n", filename);
-            fclose(f);
-            return NULL;
-        }
-
-    color_map_size = le_short(header.color_map_length) * (header.color_map_depth/8);
-    for (i = 0; i < color_map_size; ++i)
-        if (getc(f) == EOF) {
-            fprintf(stderr, "%s has incomplete color map\n", filename);
-            fclose(f);
-            return NULL;
-        }
-
-    *width = le_short(header.width); *height = le_short(header.height);
-    pixels_size = *width * *height * (header.bits_per_pixel/8);
-    pixels = malloc(pixels_size);
-
-    read = fread(pixels, 1, pixels_size, f);
-    fclose(f);
-
-    if (read != pixels_size) {
-        fprintf(stderr, "%s has incomplete image\n", filename);
-        free(pixels);
-        return NULL;
-    }
-
-    return pixels;
-}
-
-
-
