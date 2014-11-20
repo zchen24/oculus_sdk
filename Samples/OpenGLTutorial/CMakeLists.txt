@@ -9,8 +9,10 @@ list(APPEND OVR_ALL_LIBRARIES ${OVR_LIBRARIES} CommonSrc Xinerama)
 
 add_executable(OpenGLTutorial
   mainCopy.cpp
-  UtilOculusRift.h
-  UtilOculusRift.cpp
+  OculusRift.h
+  OculusRift.cpp
+  OculusShader.h
+  OculusShader.cpp
   shader/oculus.f.glsl
   shader/oculus.v.glsl)
 

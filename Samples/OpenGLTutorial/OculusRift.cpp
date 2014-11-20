@@ -1,6 +1,6 @@
 // oculus
 #include <iostream>
-#include "UtilOculusRift.h"
+#include "OculusRift.h"
 #include "GL/glut.h"
 
 MyOculusRift::MyOculusRift()
