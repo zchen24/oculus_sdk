@@ -20,21 +20,22 @@
 //"}";
 
 
-uniform float fade_factor;
+uniform float fadeFactor;
 uniform sampler2D texture;  // texture from app (video frame)
 
 in vec2 oTexcoord0;  // from vertex shader, vertex coordinate
 in vec2 oTexcoord1;  // from vertex shader, vertex coordinate
 in vec2 oTexcoord2;  // from vertex shader, vertex coordinate
-in vec3 oColor;     // from vertex shader, fading
+in float oVignette;      // from vertex shader, fading
 
 void main()
 {
     // sample value
-    float ResultR = texture2D(texture, oTexcoord0).r * oColor.r;
-    float ResultG = texture2D(texture, oTexcoord1).g * oColor.g;
-    float ResultB = texture2D(texture, oTexcoord2).b * oColor.b;
+    float ResultR = texture2D(texture, oTexcoord0).r * oVignette;
+    float ResultG = texture2D(texture, oTexcoord1).g * oVignette;
+    float ResultB = texture2D(texture, oTexcoord2).b * oVignette;
 
-//    gl_FragColor = vec4(ResultR, ResultG, ResultB, 1.0) * fade_factor;
+//    gl_FragColor = vec4(ResultR, ResultG, ResultB, 1.0) * fadeFactor;
     gl_FragColor = vec4(ResultR, ResultG, ResultB, 1.0);
+//    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0) * oVignette;
 }

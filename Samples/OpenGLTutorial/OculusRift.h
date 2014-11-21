@@ -5,7 +5,6 @@
 #include "OVR.h"
 #include "OVR_Profile.h"
 #include "OVR_Stereo.h"
-#include "OVR_CAPI_GL.h"
 #include "OVR_CAPI_Keys.h"
 #include "CAPI/GL/CAPI_GL_HSWDisplay.h"
 
@@ -18,6 +17,17 @@ public:
     void InitProfile();
     void InitRender();
     void InitTracking();
+
+    const ovrHmdDesc* GetHmd(){
+        return mHmd;
+    }
+
+    ovrVector2f GetEyeSourceToUVScale(const ovrEyeType &t){
+        return mUVScaleOffset[t][0];
+    }
+    ovrVector2f GetEyeSourceToUVOffset(const ovrEyeType &t){
+        return mUVScaleOffset[t][1];
+    }
 
 protected:
     const ovrHmdDesc* mHmd;

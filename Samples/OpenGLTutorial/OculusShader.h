@@ -8,6 +8,7 @@
 
 #include <OVR_CAPI.h>
 #include <opencv2/opencv.hpp>
+#include "OculusRift.h"
 
 
 // FrameWork Reference:
@@ -51,8 +52,20 @@ private:
     // Instance
     static OculusShader* mInstance;
     cv::VideoCapture mCap;
+    MyOculusRift mOculus;
+
+
+    // ------------------------
+
+
+
 
     // Shader related stuff
+    GLuint mOculusVertexBuffer;
+    GLuint mOculusVignetteBuffer;
+    GLuint mOculusElementBuffer;
+    GLsizei mOculusElementCount;
+
     GLuint mVertexBuffer, mElementBuffer;
     GLuint mTexture;
     GLuint mVertexShader, mFragmentShader;
@@ -68,6 +81,7 @@ private:
 
     struct {
         GLint positionLoc;
+        GLint vignetteLoc;
     } mAttributes;
 
     GLfloat mFadeFactor;

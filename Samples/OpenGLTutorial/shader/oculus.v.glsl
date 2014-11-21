@@ -26,8 +26,8 @@
 uniform vec2 EyeToSourceUVScale;
 uniform vec2 EyeToSourceUVOffset;
 
-in vec2 position;
-in vec3 Color;   // Color from Program
+in vec2 Position;
+in float Vignette;   // Color from Program
 in vec2 Texcoord0;
 in vec2 Texcoord1;
 in vec2 Texcoord2;
@@ -35,22 +35,27 @@ in vec2 Texcoord2;
 out vec2 oTexcoord0;
 out vec2 oTexcoord1;
 out vec2 oTexcoord2;
-out vec3 oColor;
+out float oVignette;
 
 void main()
 {
-    gl_Position = vec4(position, 0.0, 1.0);
+    gl_Position = vec4(Position, 0.5, 1.0);
+
+
 //    texcoord = position * vec2(0.5) + vec2(0.5);
 
 //    oTexcoord0 = position * vec2(0.5) + vec2(0.5);
 //    oTexcoord1 = position * vec2(0.5) + vec2(0.5);
 //    oTexcoord2 = position * vec2(0.5) + vec2(0.5);
 
-    oTexcoord0 = position * vec2(0.5) + EyeToSourceUVOffset;
-    oTexcoord1 = position * vec2(0.5) + EyeToSourceUVOffset;
-    oTexcoord2 = position * vec2(0.5) + EyeToSourceUVOffset;
+//    oTexcoord0 = position * vec2(0.5) + EyeToSourceUVOffset;
+//    oTexcoord1 = position * vec2(0.5) + EyeToSourceUVOffset;
+//    oTexcoord2 = position * vec2(0.5) + EyeToSourceUVOffset;
 
-    oColor = vec3(1.0, 1.0, 1.0);
+    oTexcoord0 = EyeToSourceUVScale * Texcoord0 + EyeToSourceUVOffset;
+    oTexcoord1 = EyeToSourceUVScale * Texcoord1 + EyeToSourceUVOffset;
+    oTexcoord2 = EyeToSourceUVScale * Texcoord2 + EyeToSourceUVOffset;
+    oVignette = Vignette;
 }
 
 

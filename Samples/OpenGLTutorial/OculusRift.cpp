@@ -60,7 +60,7 @@ void MyOculusRift::InitProfile()
         }
     }
 
-
+#if 0
     //------- Basically Update Mesh Stuff ----------
     // Initialize ovrEyeRenderDesc struct.
     mRenderSize.w = 800;
@@ -85,7 +85,7 @@ void MyOculusRift::InitProfile()
     mEyeRenderDesc[0] = ovrHmd_GetRenderDesc(mHmd, ovrEye_Left, mEyeFov[0]);
     mEyeRenderDesc[1] = ovrHmd_GetRenderDesc(mHmd, ovrEye_Right, mEyeFov[1]);
 
-    for (size_t eyeNum = 0; eyeNum < 2; eyeNum++)
+    for (size_t eyeNum = 0; eyeNum < 1; eyeNum++)
     {
         ovrDistortionMesh meshData;
         unsigned int distortionCaps =
@@ -104,9 +104,52 @@ void MyOculusRift::InitProfile()
                                        mRenderSize,
                                        mEyeRenderViewport[eyeNum],
                                        mUVScaleOffset[eyeNum]);
-    }
 
-    1 == 1;
+
+        // save data here
+        GLfloat Position[2][meshData.VertexCount];
+
+        GLfloat VignetteFactor[meshData.VertexCount];
+        ovrDistortionVertex* ov = meshData.pVertexData;
+        for (size_t i = 0; i < meshData.VertexCount; i++)
+        {
+            Position[0][i] = ov->ScreenPosNDC.x;
+            Position[1][i] = ov->ScreenPosNDC.y;
+            VignetteFactor[i] = ov->VignetteFactor;
+            ov++;
+        }
+
+        // CHANGE SHIT HERE
+
+        // vertex buffer
+        GLuint oculusVertexBuffer;
+        glGenBuffers(1, &oculusVertexBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, oculusVertexBuffer);
+        glBufferData(GL_ARRAY_BUFFER,
+                     sizeof(float) * 2 * meshData.VertexCount,
+                     meshData.pVertexData,
+                     GL_STATIC_DRAW);
+
+        // vignette buffer
+        GLuint oculusVignetteBuffer;
+        glGenBuffers(1, &oculusVertexBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, oculusVignetteBuffer);
+        glBufferData(GL_ARRAY_BUFFER,
+                     sizeof(GLfloat) * meshData.VertexCount,
+                     VignetteFactor,
+                     GL_STATIC_DRAW);
+
+        // index element buffer
+        GLuint oculusElementBuffer;
+        glGenBuffers(1, &oculusElementBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, oculusElementBuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     sizeof(unsigned short) * meshData.IndexCount,
+                     meshData.pIndexData,
+                     GL_STATIC_DRAW);
+        ovrHmd_DestroyDistortionMesh(&meshData);
+    }
+#endif
 }
 
 

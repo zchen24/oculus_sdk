@@ -52,11 +52,6 @@ int main(int argc, char** argv)
     glutIdleFunc(&OculusShader::CallbackOnIdleWrapper);
     glutKeyboardFunc(&OculusShader::CallbackKeyFuncWrapper);
 
-    // Oculus Rift
-    MyOculusRift Oculus;
-    Oculus.InitProfile();
-    Oculus.InitTracking();
-
     glutMainLoop();
     return 0;
 }
