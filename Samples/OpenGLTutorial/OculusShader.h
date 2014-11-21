@@ -57,14 +57,11 @@ private:
 
     // ------------------------
 
-
-
-
     // Shader related stuff
-    GLuint mOculusVertexBuffer;
-    GLuint mOculusVignetteBuffer;
-    GLuint mOculusElementBuffer;
-    GLsizei mOculusElementCount;
+    GLuint mOculusVertexBuffer[2];
+    GLuint mOculusVignetteBuffer[2];
+    GLuint mOculusElementBuffer[2];
+    GLsizei mOculusElementCount[2];
 
     GLuint mVertexBuffer, mElementBuffer;
     GLuint mTexture;

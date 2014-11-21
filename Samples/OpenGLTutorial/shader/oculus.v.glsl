@@ -37,20 +37,16 @@ out vec2 oTexcoord1;
 out vec2 oTexcoord2;
 out float oVignette;
 
+out vec2 oTexcoord;
+
 void main()
 {
     gl_Position = vec4(Position, 0.5, 1.0);
 
+    // Quickly text things
+    oTexcoord = Position * vec2(0.5) + vec2(0.5);
 
-//    texcoord = position * vec2(0.5) + vec2(0.5);
 
-//    oTexcoord0 = position * vec2(0.5) + vec2(0.5);
-//    oTexcoord1 = position * vec2(0.5) + vec2(0.5);
-//    oTexcoord2 = position * vec2(0.5) + vec2(0.5);
-
-//    oTexcoord0 = position * vec2(0.5) + EyeToSourceUVOffset;
-//    oTexcoord1 = position * vec2(0.5) + EyeToSourceUVOffset;
-//    oTexcoord2 = position * vec2(0.5) + EyeToSourceUVOffset;
 
     oTexcoord0 = EyeToSourceUVScale * Texcoord0 + EyeToSourceUVOffset;
     oTexcoord1 = EyeToSourceUVScale * Texcoord1 + EyeToSourceUVOffset;
