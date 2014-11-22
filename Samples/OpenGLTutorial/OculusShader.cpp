@@ -370,16 +370,25 @@ void OculusShader::CallbackOnIdle()
     mCap >> frame;
 //    cv::flip(frame, frame, 0);  // flip around x
 
+
+    // Code Snippet to put two images side by side
+    cv::Mat fullFrame(frame.rows, frame.cols * 2, CV_8UC3);
+    fullFrame.adjustROI(0, 0, 0, -frame.cols);
+    frame.copyTo(fullFrame);
+    fullFrame.adjustROI(0, 0, -frame.cols, frame.cols);
+    frame.copyTo(fullFrame);
+    fullFrame.adjustROI(0, 0, frame.cols, 0);
+
     // opencv version
     int width, height;
-    width = frame.cols;
-    height = frame.rows;
+    width = fullFrame.cols;
+    height = fullFrame.rows;
     glTexImage2D(
         GL_TEXTURE_2D, 0,           /* target, level */
         GL_RGB8,                    /* internal format */
         width, height, 0,           /* width, height, border */
         GL_BGR, GL_UNSIGNED_BYTE,   /* external format, type */
-        frame.data                  /* pixels */
+        fullFrame.data                  /* pixels */
     );
 }
 
