@@ -33,15 +33,14 @@ in vec2 oTexcoord;
 void main()
 {
     // sample value
-//    float ResultR = texture2D(texture, oTexcoord0).r * oVignette;
-//    float ResultG = texture2D(texture, oTexcoord1).g * oVignette;
-//    float ResultB = texture2D(texture, oTexcoord2).b * oVignette;
+    float ResultR = texture2D(texture, oTexcoord0).r * 1.0;
+    float ResultG = texture2D(texture, oTexcoord1).g * 1.0;
+    float ResultB = texture2D(texture, oTexcoord2).b * 1.0;
 
 //    gl_FragColor = vec4(ResultR, ResultG, ResultB, 1.0) * fadeFactor;
-//    gl_FragColor = vec4(ResultR, ResultG, ResultB, 1.0);
+    gl_FragColor = vec4(ResultR, ResultG, ResultB, 1.0) * oVignette;
+
 //    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0) * oVignette;
-
-    gl_FragColor = texture2D(texture, oTexcoord);
-
+//    gl_FragColor = texture2D(texture, oTexcoord) * fadeFactor;
 //    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }

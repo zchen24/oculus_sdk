@@ -10,20 +10,6 @@
 // - change Vignette back
 
 
-
-
-/*
- * Data used to seed our vertex array and element array buffers:
- */
-static const GLfloat g_vertex_buffer_data[] = {
-    -1.0f, -1.0f,
-     1.0f, -1.0f,
-    -1.0f,  1.0f,
-     1.0f,  1.0f
-};
-static const GLushort g_element_buffer_data[] = { 0, 1, 2, 3 };
-
-
 //static OculusShader::instance = NULL;
 
 OculusShader* OculusShader::mInstance = NULL;
@@ -57,16 +43,6 @@ OculusShader::OculusShader()
     mProgram = makeProgram(mVertexShader, mFragmentShader);
     if (mProgram == 0)
         std::cerr << "Failed to create program" << std::endl;
-
-
-    // initialize stuff here
-    mVertexBuffer = makeBuffer(GL_ARRAY_BUFFER,
-                               g_vertex_buffer_data,
-                               sizeof(g_vertex_buffer_data));
-    mElementBuffer = makeBuffer(GL_ELEMENT_ARRAY_BUFFER,
-                                g_element_buffer_data,
-                                sizeof(g_element_buffer_data));
-
 
     // ------- Ocullus Specific ----------------
     const ovrHmdDesc* hmd = mOculus.GetHmd();
@@ -105,9 +81,9 @@ OculusShader::OculusShader()
     for (size_t eyeNum = 0; eyeNum < 2; eyeNum++)
     {
         ovrDistortionMesh meshData;
-        unsigned int distortionCaps =
-                ovrDistortionCap_Vignette |
-                ovrDistortionCap_Chromatic;
+        unsigned int distortionCaps = 0;
+//        distortionCaps |= ovrDistortionCap_Vignette;
+//        distortionCaps |= ovrDistortionCap_Chromatic;
 
         // create hmd
         ovrHmd_CreateDistortionMesh(hmd,
@@ -122,10 +98,17 @@ OculusShader::OculusShader()
                                        mEyeRenderViewport[eyeNum],
                                        mUVScaleOffset[eyeNum]);
 
+        mEyeScale[eyeNum][0] = mUVScaleOffset[eyeNum][0].x;
+        mEyeScale[eyeNum][1] = mUVScaleOffset[eyeNum][0].y;
+        mEyeOffset[eyeNum][0] = mUVScaleOffset[eyeNum][1].x;
+        mEyeOffset[eyeNum][1] = mUVScaleOffset[eyeNum][1].y;
 
         // save data here
 //        GLfloat Position[2][meshData.VertexCount];
         GLfloat Position[meshData.VertexCount][2];
+        GLfloat Texcoord0[meshData.VertexCount][2];
+        GLfloat Texcoord1[meshData.VertexCount][2];
+        GLfloat Texcoord2[meshData.VertexCount][2];
 
         GLfloat VignetteFactor[meshData.VertexCount];
         ovrDistortionVertex* ov = meshData.pVertexData;
@@ -134,9 +117,21 @@ OculusShader::OculusShader()
             Position[i][0] = ov->ScreenPosNDC.x;
             Position[i][1] = ov->ScreenPosNDC.y;
 
-            VignetteFactor[i] = ov->VignetteFactor;
+            Texcoord0[i][0] = ov->TanEyeAnglesR.x;
+            Texcoord0[i][1] = ov->TanEyeAnglesR.y;
 
-//            VignetteFactor[i] = 0.8;
+            Texcoord1[i][0] = ov->TanEyeAnglesG.x;
+            Texcoord1[i][1] = ov->TanEyeAnglesG.y;
+
+            Texcoord2[i][0] = ov->TanEyeAnglesB.x;
+            Texcoord2[i][1] = ov->TanEyeAnglesB.y;
+
+//            VignetteFactor[i] = ov->VignetteFactor;
+            VignetteFactor[i] = 0.8;
+
+//            unsigned char factor = ov->VignetteFactor * 259.99;
+//            std::cout << "vignette = " << (int)(unsigned char)(ov->VignetteFactor * 259.99) << std::endl;
+
             ov++;
         }
 
@@ -149,6 +144,31 @@ OculusShader::OculusShader()
                      sizeof(float) * 2 * meshData.VertexCount,
                      Position,
                      GL_STATIC_DRAW);
+
+        // texcoord0
+        glGenBuffers(1, &mOculusTex0[eyeNum]);
+        glBindBuffer(GL_ARRAY_BUFFER, mOculusTex0[eyeNum]);
+        glBufferData(GL_ARRAY_BUFFER,
+                     sizeof(float) * 2 * meshData.VertexCount,
+                     Texcoord0,
+                     GL_STATIC_DRAW);
+
+        // texcoord1
+        glGenBuffers(1, &mOculusTex1[eyeNum]);
+        glBindBuffer(GL_ARRAY_BUFFER, mOculusTex1[eyeNum]);
+        glBufferData(GL_ARRAY_BUFFER,
+                     sizeof(float) * 2 * meshData.VertexCount,
+                     Texcoord1,
+                     GL_STATIC_DRAW);
+
+        // texcoord2
+        glGenBuffers(1, &mOculusTex2[eyeNum]);
+        glBindBuffer(GL_ARRAY_BUFFER, mOculusTex2[eyeNum]);
+        glBufferData(GL_ARRAY_BUFFER,
+                     sizeof(float) * 2 * meshData.VertexCount,
+                     Texcoord2,
+                     GL_STATIC_DRAW);
+
 
         // vignette buffer
         glGenBuffers(1, &mOculusVignetteBuffer[eyeNum]);
@@ -183,16 +203,21 @@ OculusShader::OculusShader()
             glGetUniformLocation(mProgram, "EyeToSourceUVScale");
     mUniforms.eyeToSourceUVOffsetLoc =
             glGetUniformLocation(mProgram, "EyeToSourceUVOffset");
-
     mUniforms.fadeFactorLoc =
             glGetUniformLocation(mProgram, "fadeFactor");
     mUniforms.textureLoc =
             glGetUniformLocation(mProgram, "texture");
+
     mAttributes.positionLoc =
             glGetAttribLocation(mProgram, "Position");
     mAttributes.vignetteLoc =
             glGetAttribLocation(mProgram, "Vignette");
-
+    mAttributes.texcoord0Loc =
+            glGetAttribLocation(mProgram, "Texcoord0");
+    mAttributes.texcoord1Loc =
+            glGetAttribLocation(mProgram, "Texcoord1");
+    mAttributes.texcoord2Loc =
+            glGetAttribLocation(mProgram, "Texcoord2");
 
     // ------ Oculus Rift ----------
     mOculus.InitProfile();
@@ -227,34 +252,34 @@ void OculusShader::CallbackRender(void)
 
     glUseProgram(mProgram);
 
-    // get eyeReleated params from oculus rift
-    ovrVector2f eyeScale = mOculus.GetEyeSourceToUVScale(ovrEye_Left);
-    ovrVector2f eyeOffset = mOculus.GetEyeSourceToUVOffset(ovrEye_Left);
-
-
-    // Update uniforms values
-    GLfloat eyeToSourceUVScale[2];
-    eyeToSourceUVScale[0] = 1.0; eyeToSourceUVScale[1] = 1.0;
-    glUniform2fv(mUniforms.eyeToSourceUVScaleLoc,
-                 1, eyeToSourceUVScale);
-
-    GLfloat eyeToSourceUVOffset[2];
-    eyeToSourceUVOffset[0] = eyeOffset.x;
-    eyeToSourceUVOffset[1] = eyeOffset.y;
-    glUniform2fv(mUniforms.eyeToSourceUVOffsetLoc,
-                 1, eyeToSourceUVOffset);
-
+    // fade factor
     glUniform1f(mUniforms.fadeFactorLoc, mFadeFactor);
-
 
     // for textures
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mTexture);
-    glUniform1i(mUniforms.textureLoc, 0);    
+    glUniform1i(mUniforms.textureLoc, 0);
+
+
+    ovrEyeType eyeRenderOrder[2];
+    eyeRenderOrder[0] = ovrEye_Left;
+    eyeRenderOrder[1] = ovrEye_Right;
 
 
     for (size_t eyeNum = 0; eyeNum < 2; eyeNum++)
     {
+        // ----- Eye Constants -------
+        // get eyeReleated params from oculus rift
+
+        // Update uniforms values
+        glUniform2fv(mUniforms.eyeToSourceUVScaleLoc,
+                     1, &mEyeScale[eyeNum][0]);
+        glUniform2fv(mUniforms.eyeToSourceUVOffsetLoc,
+                     1, &mEyeOffset[eyeNum][0]);
+
+//        std::cout << "Scale = " << mEyeScale[eyeNum][0] << " " << mEyeScale[eyeNum][1] << std::endl;
+//        std::cout << "Offse = " << mEyeOffset[eyeNum][0] << " " << mEyeOffset[eyeNum][1] << std::endl;
+
         // vertex position
         glBindBuffer(GL_ARRAY_BUFFER, mOculusVertexBuffer[eyeNum]);
         glVertexAttribPointer(
@@ -267,6 +292,7 @@ void OculusShader::CallbackRender(void)
         );
         glEnableVertexAttribArray(mAttributes.positionLoc);
 
+        // vignette
         glBindBuffer(GL_ARRAY_BUFFER, mOculusVignetteBuffer[eyeNum]);
         glVertexAttribPointer(
                     mAttributes.vignetteLoc,    // attribute
@@ -278,16 +304,54 @@ void OculusShader::CallbackRender(void)
                     );
         glEnableVertexAttribArray(mAttributes.vignetteLoc);
 
+        // texcoord0
+        glBindBuffer(GL_ARRAY_BUFFER, mOculusTex0[eyeNum]);
+        glVertexAttribPointer(
+                    mAttributes.texcoord0Loc,    // attribute
+                    2,
+                    GL_FLOAT,
+                    GL_FALSE,
+                    sizeof(GLfloat)*2,
+                    (void*)0
+                    );
+        glEnableVertexAttribArray(mAttributes.texcoord0Loc);
+
+        glBindBuffer(GL_ARRAY_BUFFER, mOculusTex1[eyeNum]);
+        glVertexAttribPointer(
+                    mAttributes.texcoord1Loc,    // attribute
+                    2,
+                    GL_FLOAT,
+                    GL_FALSE,
+                    sizeof(GLfloat)*2,
+                    (void*)0
+                    );
+        glEnableVertexAttribArray(mAttributes.texcoord1Loc);
+
+        glBindBuffer(GL_ARRAY_BUFFER, mOculusTex2[eyeNum]);
+        glVertexAttribPointer(
+                    mAttributes.texcoord2Loc,    // attribute
+                    2,
+                    GL_FLOAT,
+                    GL_FALSE,
+                    sizeof(GLfloat)*2,
+                    (void*)0
+                    );
+        glEnableVertexAttribArray(mAttributes.texcoord2Loc);
+
+        // Draw
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mOculusElementBuffer[eyeNum]);
         glDrawElements(
-            GL_TRIANGLE_STRIP,   /* mode */
+                    GL_TRIANGLE_STRIP,   /* mode */
                     mOculusElementCount[eyeNum], /* count */
-            GL_UNSIGNED_SHORT,   /* type */
-            (void*)0             /* element array buffer offset */
+                    GL_UNSIGNED_SHORT,   /* type */
+                    (void*)0             /* element array buffer offset */
         );
 
         glDisableVertexAttribArray(mAttributes.positionLoc);
         glDisableVertexAttribArray(mAttributes.vignetteLoc);
+        glDisableVertexAttribArray(mAttributes.texcoord0Loc);
+        glDisableVertexAttribArray(mAttributes.texcoord1Loc);
+        glDisableVertexAttribArray(mAttributes.texcoord2Loc);
     }
 
     glutSwapBuffers();
@@ -304,10 +368,10 @@ void OculusShader::CallbackOnIdle()
     // grep image and update texture from webcam;
     cv::Mat frame;
     mCap >> frame;
+//    cv::flip(frame, frame, 0);  // flip around x
 
     // opencv version
     int width, height;
-    cv::flip(frame, frame, 0);  // flip around x
     width = frame.cols;
     height = frame.rows;
     glTexImage2D(

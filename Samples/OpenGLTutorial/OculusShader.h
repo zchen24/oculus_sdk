@@ -59,9 +59,14 @@ private:
 
     // Shader related stuff
     GLuint mOculusVertexBuffer[2];
+    GLuint mOculusTex0[2];
+    GLuint mOculusTex1[2];
+    GLuint mOculusTex2[2];
     GLuint mOculusVignetteBuffer[2];
     GLuint mOculusElementBuffer[2];
     GLsizei mOculusElementCount[2];
+    GLfloat mEyeScale[2][2];
+    GLfloat mEyeOffset[2][2];
 
     GLuint mVertexBuffer, mElementBuffer;
     GLuint mTexture;
@@ -79,6 +84,9 @@ private:
     struct {
         GLint positionLoc;
         GLint vignetteLoc;
+        GLint texcoord0Loc;
+        GLint texcoord1Loc;
+        GLint texcoord2Loc;
     } mAttributes;
 
     GLfloat mFadeFactor;

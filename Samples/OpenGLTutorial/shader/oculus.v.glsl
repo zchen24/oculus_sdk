@@ -46,8 +46,6 @@ void main()
     // Quickly text things
     oTexcoord = Position * vec2(0.5) + vec2(0.5);
 
-
-
     oTexcoord0 = EyeToSourceUVScale * Texcoord0 + EyeToSourceUVOffset;
     oTexcoord1 = EyeToSourceUVScale * Texcoord1 + EyeToSourceUVOffset;
     oTexcoord2 = EyeToSourceUVScale * Texcoord2 + EyeToSourceUVOffset;
