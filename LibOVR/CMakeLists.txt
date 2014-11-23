@@ -126,6 +126,12 @@ install(FILES ${TRACKING_HEADER_FILES}
 install(FILES ${UTIL_HEADER_FILES}
   DESTINATION include/OculusSDK/Src/Util)
 
+install(TARGETS ovr
+  RUNTIME DESTINATION ${INSTALL_BIN_DIR}
+  LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+  ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
+  )
+
 
 # install udev rules
 option(INSTALL_UDEV_RULES "Install udev rules for Oculus Rift" OFF)
