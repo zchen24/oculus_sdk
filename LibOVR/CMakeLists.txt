@@ -17,9 +17,14 @@ set(DEF_INSTALL_CMAKE_DIR lib/cmake/OculusSDK)
 set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH
   "Installation directory for CMake files")
 
+# 0.4.x doesn't need Xinerama
+set(EXTRA_LIBS udev pthread GL X11)  
+# set(EXTRA_LIBS udev pthread GL X11 Xinerama)
+
 include_directories(Include)
-# set(EXTRA_LIBS udev pthread GL X11)
-set(EXTRA_LIBS udev pthread GL X11 Xinerama)
+file(GLOB INCLUDE_HEADER_FILES Include/*.h)
+
+message(STATUS "INCLUDE" ${INCLUDE_HEADER_FILES})
 
 # CAPI
 file(GLOB_RECURSE CAPI_HEADER_FILES Src/CAPI/*.h)
@@ -55,12 +60,13 @@ file(GLOB_RECURSE UTIL_SOURCE_FILES Src/Util/*.cpp)
 
 # message(STATUS "UTIL" ${UTIL_HEADER_FILES})
 
-file(GLOB HEADER_FILES Src/*.h)
-file(GLOB SOURCE_FILES Src/*.cpp)
+file(GLOB SRC_HEADER_FILES Src/*.h)
+file(GLOB SRC_SOURCE_FILES Src/*.cpp)
 
 
 set(HEADER_FILES
-  ${HEADER_FILES}
+  ${INCLUDE_HEADER_FILES}
+  ${SRC_HEADER_FILES}
   ${CAPI_HEADER_FILES}
   ${DISPLAYS_HEADER_FILES}
   ${KERNEL_HEADER_FILES}
@@ -72,7 +78,7 @@ set(HEADER_FILES
   )
 
 set(SOURCE_FILES
-  ${SOURCE_FILES}
+  ${SRC_SOURCE_FILES}
   ${CAPI_SOURCE_FILES}
   ${DISPLAYS_SOURCE_FILES}
   ${KERNEL_SOURCE_FILES}
@@ -83,8 +89,99 @@ set(SOURCE_FILES
   ${UTIL_SOURCE_FILES}
   )
 
-add_library(ovr SHARED ${SOURCE_FILES})
+add_library(ovr SHARED ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(ovr ${EXTRA_LIBS})
+
+
+# ------ Install ----------
+
+# install header files
+install(FILES ${INCLUDE_HEADER_FILES}
+  DESTINATION include/OculusSDK/Include)
+
+install(FILES ${SRC_HEADER_FILES}
+  DESTINATION include/OculusSDK/Src)
+
+install(FILES ${CAPI_HEADER_FILES}
+  DESTINATION include/OculusSDK/Src/CAPI)
+
+install(FILES ${DISPLAYS_HEADER_FILES}
+  DESTINATION include/OculusSDK/Src/Displays)
+
+install(FILES ${KERNEL_HEADER_FILES}
+  DESTINATION include/OculusSDK/Src/Kernel)
+
+install(FILES ${NET_HEADER_FILES}
+  DESTINATION include/OculusSDK/Src/Net)
+
+install(FILES ${SENSORS_HEADER_FILES}
+  DESTINATION include/OculusSDK/Src/Sensors)
+
+install(FILES ${SERVICE_HEADER_FILES}
+  DESTINATION include/OculusSDK/Src/Service)
+
+install(FILES ${TRACKING_HEADER_FILES}
+  DESTINATION include/OculusSDK/Src/Tracking)
+
+install(FILES ${UTIL_HEADER_FILES}
+  DESTINATION include/OculusSDK/Src/Util)
+
+
+# install udev rules
+option(INSTALL_UDEV_RULES "Install udev rules for Oculus Rift" OFF)
+IF (INSTALL_UDEV_RULES)
+  INSTALL (
+    FILES 90-oculus-hydro.rules
+    DESTINATION "/etc/udev/rules.d"
+    COMPONENT "udev"
+    )
+else (INSTALL_UDEV_RULES)
+  message (STATUS "Udev rules not being installed, install them with -DINSTALL_UDEV_RULES=ON")
+endif (INSTALL_UDEV_RULES)
+
+
+# install cmake files
+file(RELATIVE_PATH REL_INCLUDE_DIR
+  "${CMAKE_INSTALL_PREFIX}/${INSTALL_CMAKE_DIR}"
+  "${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}")
+
+# ... for the build tree
+set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
+set(CONF_LIBRARY_DIRS "${PROJECT_BINARY_DIR}")
+configure_file(OculusSDKConfig.cmake.in
+  "${PROJECT_BINARY_DIR}/OculusSDKConfig.cmake" @ONLY)
+
+# ... for the install tree
+set(CONF_INCLUDE_DIRS "\${OculusSDK_CMAKE_DIR}/${REL_INCLUDE_DIR}")
+set(CONF_LIBRARY_DIRS "${CMAKE_INSTALL_PREFIX}/${INSTALL_LIB_DIR}")
+configure_file(OculusSDKConfig.cmake.in
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/OculusSDKConfig.cmake" @ONLY)
+
+# ... for both
+configure_file(OculusSDKConfigVersion.cmake.in
+  "${PROJECT_BINARY_DIR}/OculusSDKConfigVersion.cmake" @ONLY)
+
+install(FILES
+  "${PROJECT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/OculusSDKConfig.cmake"
+  "${PROJECT_BINARY_DIR}/OculusSDKConfigVersion.cmake"
+  DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
 
 
