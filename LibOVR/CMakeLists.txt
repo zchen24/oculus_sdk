@@ -9,16 +9,12 @@ set(OculusSDK_VERSION
     ${OculusSDK_MAJOR_VERSION}.${OculusSDK_MINOR_VERSION}.${OculusSDK_PATCH_VERSION}
     )
 
-set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
-set(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
-set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
-
 set(DEF_INSTALL_CMAKE_DIR lib/cmake/OculusSDK)
 set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH
   "Installation directory for CMake files")
 
 # 0.4.x doesn't need Xinerama
-set(EXTRA_LIBS udev pthread GL X11)  
+set(EXTRA_LIBS udev pthread GL X11 Xrandr edid)  
 # set(EXTRA_LIBS udev pthread GL X11 Xinerama)
 
 include_directories(Include)
