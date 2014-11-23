@@ -1,95 +1,93 @@
-project (OculusVR)
+cmake_minimum_required(VERSION 2.8)
 
-include_directories(Include Src Src/Kernel Src/Util)
-include_directories(../3rdParty/glext)
+project(OculusSDK)
 
-file(GLOB_RECURSE SOURCE_FILES Src/*.cpp Src/*.h Include/*.h)
+set(OculusSDK_MAJOR_VERSION 0)
+set(OculusSDK_MINOR_VERSION 4)
+set(OculusSDK_PATCH_VERSION 3)
+set(OculusSDK_VERSION
+    ${OculusSDK_MAJOR_VERSION}.${OculusSDK_MINOR_VERSION}.${OculusSDK_PATCH_VERSION}
+    )
 
-file(GLOB_RECURSE WIN32_FILES Src/OVR_Win32_*.cpp Src/OVR_Win32_*.h Src/Kernel/OVR_ThreadsWinAPI.cpp *D3D*.cpp)
-file(GLOB_RECURSE D3DX_FILES Src/CAPI_D3D1X*.cpp Src/OVR_D3D1X*.h)
-file(GLOB_RECURSE OSX_FILES Src/OVR_OSX_*.cpp Src/OVR_OSX_*.h Src/*.mm)
-file(GLOB_RECURSE LINUX_FILES Src/OVR_Linux_*.cpp Src/OVR_Linux_*.h)
-file(GLOB_RECURSE UNIX_FILES Src/OVR_Unix_*.cpp Src/OVR_Unix_*.h Src/Kernel/OVR_ThreadsPthread.cpp)
+set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
+set(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
+set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
 
-foreach(f ${OSX_FILES}) 
-    list(REMOVE_ITEM SOURCE_FILES ${f})
-endforeach(f) 
+set(DEF_INSTALL_CMAKE_DIR lib/cmake/OculusSDK)
+set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH
+  "Installation directory for CMake files")
 
-foreach(f ${UNIX_FILES}) 
-    list(REMOVE_ITEM SOURCE_FILES ${f})
-endforeach(f) 
+include_directories(Include)
+# set(EXTRA_LIBS udev pthread GL X11)
+set(EXTRA_LIBS udev pthread GL X11 Xinerama)
 
-foreach(f ${LINUX_FILES}) 
-    list(REMOVE_ITEM SOURCE_FILES ${f})
-endforeach(f) 
+# CAPI
+file(GLOB_RECURSE CAPI_HEADER_FILES Src/CAPI/*.h)
+file(GLOB_RECURSE CAPI_SOURCE_FILES Src/CAPI/*.cpp)
 
-foreach(f ${WIN32_FILES}) 
-    list(REMOVE_ITEM SOURCE_FILES ${f})
-endforeach(f) 
+# Displays
+file(GLOB_RECURSE DISPLAYS_HEADER_FILES Src/Displays/*.h)
+file(GLOB_RECURSE DISPLAYS_SOURCE_FILES Src/Displays/*.cpp)
 
-if(WIN32)
+# Kernel
+file(GLOB_RECURSE KERNEL_HEADER_FILES Src/Kernel/*.h)
+file(GLOB_RECURSE KERNEL_SOURCE_FILES Src/Kernel/*.cpp)
 
-    # Extra source
-    list(APPEND SOURCE_FILES ${WIN32_FILES})
-    foreach(f ${D3DX_FILES}) 
-      list(REMOVE_ITEM SOURCE_FILES ${f})
-    endforeach(f) 
+# Net
+file(GLOB_RECURSE NET_HEADER_FILES Src/Net/*.h)
+file(GLOB_RECURSE NET_SOURCE_FILES Src/Net/*.cpp)
+
+# Sensors
+file(GLOB_RECURSE SENSORS_HEADER_FILES Src/Sensors/*.h)
+file(GLOB_RECURSE SENSORS_SOURCE_FILES Src/Sensors/*.cpp)
+
+# Service
+file(GLOB_RECURSE SERVICE_HEADER_FILES Src/Service/*.h)
+file(GLOB_RECURSE SERVICE_SOURCE_FILES Src/Service/*.cpp)
+
+# Tracking
+file(GLOB_RECURSE TRACKING_HEADER_FILES Src/Tracking/*.h)
+file(GLOB_RECURSE TRACKING_SOURCE_FILES Src/Tracking/*.cpp)
+
+# Util 
+file(GLOB_RECURSE UTIL_HEADER_FILES Src/Util/*.h)
+file(GLOB_RECURSE UTIL_SOURCE_FILES Src/Util/*.cpp)
+
+# message(STATUS "UTIL" ${UTIL_HEADER_FILES})
+
+file(GLOB HEADER_FILES Src/*.h)
+file(GLOB SOURCE_FILES Src/*.cpp)
 
 
-    # Extra libs
-    list(APPEND EXTRA_LIBS setupapi winmm ws2_32)
+set(HEADER_FILES
+  ${HEADER_FILES}
+  ${CAPI_HEADER_FILES}
+  ${DISPLAYS_HEADER_FILES}
+  ${KERNEL_HEADER_FILES}
+  ${NET_HEADER_FILES}
+  ${SENSORS_HEADER_FILES}
+  ${SERVICE_HEADER_FILES}
+  ${TRACKING_HEADER_FILES}
+  ${UTIL_HEADER_FILES} 
+  )
 
-elseif(APPLE)
+set(SOURCE_FILES
+  ${SOURCE_FILES}
+  ${CAPI_SOURCE_FILES}
+  ${DISPLAYS_SOURCE_FILES}
+  ${KERNEL_SOURCE_FILES}
+  ${NET_SOURCE_FILES}
+  ${SENSORS_SOURCE_FILES}
+  ${SERVICE_SOURCE_FILES}
+  ${TRACKING_SOURCE_FILES}
+  ${UTIL_SOURCE_FILES}
+  )
 
-    # Extra source
-    list(APPEND SOURCE_FILES ${OSX_FILES})
-    list(APPEND SOURCE_FILES ${UNIX_FILES})
+add_library(ovr SHARED ${SOURCE_FILES})
+target_link_libraries(ovr ${EXTRA_LIBS})
 
-    # Some special files that apparently don’t belong in the SDK ?!
-    file(GLOB_RECURSE OSX_PRIVATE_FILES Src/Displays/OVR_OSX_Focus*)
-    foreach(f ${OSX_PRIVATE_FILES}) 
-        list(REMOVE_ITEM SOURCE_FILES ${f})
-    endforeach(f) 
 
-    # Extra libs
-    find_library(COCOA_LIBRARY Cocoa)
-    find_library(IOKIT_LIBRARY IOKit)
-    list(APPEND EXTRA_LIBS ${COCOA_LIBRARY} ${IOKIT_LIBRARY})
 
-    find_package(OpenGL REQUIRED)
-    list(APPEND EXTRA_LIBS ${OPENGL_LIBRARIES})
 
-else()
 
-    # Extra source
-    list(APPEND SOURCE_FILES ${LINUX_FILES})
-    list(APPEND SOURCE_FILES ${UNIX_FILES})
-
-    # Extra libs
-    add_subdirectory(../3rdParty/EDID ${CMAKE_CURRENT_BINARY_DIR}/../3rdParty/EDID)
-    
-    # Used by the SDK to read the EDID of the monitors
-    list(APPEND EXTRA_LIBS edid rt)
-
-    # Used by the SDK to access the HID functions
-    list(APPEND EXTRA_LIBS udev)
-
-    find_package(Threads REQUIRED)
-    list(APPEND EXTRA_LIBS ${CMAKE_THREAD_LIBS_INIT})
-
-    # Check for XRandR (modern resolution switching and gamma control)
-    find_package(X11 REQUIRED)
-    if (NOT X11_Xrandr_FOUND)
-        message(FATAL_ERROR "The RandR library and headers were not found")
-    endif()
-    list(APPEND EXTRA_LIBS ${X11_X11_LIB}) 
-    list(APPEND EXTRA_LIBS ${X11_Xrandr_LIB})
-
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../3rdParty/EDID)
-
-endif()
-
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DOVR_BUILD_DEBUG")
-add_library(OculusVR ${SOURCE_FILES} ${PLATFORM_SOURCE_FILES})
-target_link_libraries(OculusVR ${EXTRA_LIBS})
-set(OVR_LIBRARIES ${EXTRA_LIBS} CACHE STRING "Dependencies of OculusVR")
+  
